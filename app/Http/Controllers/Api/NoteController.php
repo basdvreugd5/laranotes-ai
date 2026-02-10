@@ -1,32 +1,22 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreNoteRequest;
 use App\Http\Requests\UpdateNoteRequest;
 use App\Http\Resources\NoteResource;
 use App\Models\Note;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class NoteController extends Controller
 {
     use AuthorizesRequests;
 
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request)
     {
-        $archived = $request->has('archived')
-            ? $request->boolean('archived')
-            : false; // ← default active only
-
-        $notes = Note::query()
-            ->forUser($request->user())
-            ->archivedState($archived)
-            ->search($request->query('search'))
-            ->latest()
-            ->paginate(5)
-            ->withQueryString();
+        $notes = Note::getFilteredForUser($request->user(), $request);
 
         return NoteResource::collection($notes);
     }

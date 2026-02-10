@@ -104,4 +104,18 @@ class Note extends Model
         $this->archived = true;
         $this->save();
     }
+
+    /**
+     * Get filtered notes for a user based on request parameters.
+     */
+    public static function getFilteredForUser($user, $request)
+    {
+        return self::query()
+            ->forUser($user)
+            ->archivedState($request->boolean('archived', false))
+            ->search($request->query('search'))
+            ->latest()
+            ->paginate(5)
+            ->withQueryString();
+    }
 }

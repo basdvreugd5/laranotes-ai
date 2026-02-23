@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Ai\Agents\NoteSummarizer;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreNoteRequest;
 use App\Http\Requests\UpdateNoteRequest;
 use App\Http\Resources\NoteResource;
 use App\Models\Note;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class NoteController extends Controller
@@ -21,29 +24,56 @@ class NoteController extends Controller
         return NoteResource::collection($notes);
     }
 
-    public function store(StoreNoteRequest $request): NoteResource
+    public function store(StoreNoteRequest $request): NoteResource|RedirectResponse
     {
-        $note = $request->user()->notes()->create(
-            $request->validated()
-        );
+        $note = $request->user()->notes()->create($request->validated());
 
-        return new NoteResource($note);
+        if ($request->wantsJson()) {
+            return new NoteResource($note);
+        }
+
+        return redirect()->route('dashboard')->with('status', 'Note created!');
     }
 
-    public function update(UpdateNoteRequest $request, Note $note): NoteResource
+    public function update(UpdateNoteRequest $request, Note $note): NoteResource|RedirectResponse
     {
         $note->update($request->validated());
 
-        return new NoteResource($note);
+        if ($request->wantsJson()) {
+            return new NoteResource($note);
+        }
+
+        return back()->with('status', 'Note updated!');
     }
 
-    public function archive(Note $note): NoteResource
+    public function archive(Note $note): NoteResource|RedirectResponse
     {
-        // Authorization handled here intentionally: no input, non-CRUD action
         $this->authorize('archive', $note);
 
         $note->archive();
 
-        return new NoteResource($note);
+        if (request()->wantsJson()) {
+            return new NoteResource($note);
+        }
+
+        return redirect()->route('dashboard')->with('status', 'Note archived!');
+    }
+
+    public function summarize(Note $note, NoteSummarizer $agent): JsonResponse
+    {
+        $this->authorize('update', $note);
+
+        try {
+            $note->summarize($agent);
+
+            return response()->json([
+                'message' => 'Summary appended successfully.',
+                'note' => $note,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 422);
+        }
     }
 }

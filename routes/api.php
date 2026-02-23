@@ -14,4 +14,6 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     Route::post('/notes', [NoteController::class, 'store']);
     Route::patch('/notes/{note}', [NoteController::class, 'update']);
     Route::post('/notes/{note}/archive', [NoteController::class, 'archive']);
+
+    Route::post('/notes/{note}/summarize', [NoteController::class, 'summarize']);
 });

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Ai\Agents\NoteSummarizer;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -117,5 +118,23 @@ class Note extends Model
             ->latest()
             ->paginate(5)
             ->withQueryString();
+    }
+
+    /**
+     * Appends an AI-generated summary to the note body if one doesn't already exist.
+     *
+     * * @throws \Exception
+     */
+    public function summarize(NoteSummarizer $agent): void
+    {
+        if (str_contains($this->body, '--- AI Summary ---')) {
+            throw new \Exception('Note already has a summary!');
+        }
+
+        $summary = $agent->prompt($this->body);
+
+        $this->update([
+            'body' => "--- AI Summary ---\n".$summary."\n\n------------------\n\n".$this->body,
+        ]);
     }
 }

@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('title');
             $table->text('body')->nullable();
+            $table->text('tldr')->nullable();
             $table->boolean('archived')->default(false);
             $table->timestamps();
             $table->index(['user_id', 'archived']);

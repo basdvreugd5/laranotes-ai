@@ -22,6 +22,7 @@ class Note extends Model
     protected $fillable = [
         'title',
         'body',
+        'tldr',
         'archived',
     ];
 
@@ -125,16 +126,21 @@ class Note extends Model
      *
      * * @throws \Exception
      */
-    public function summarize(NoteSummarizer $agent): void
+    public function generateSummary(NoteSummarizer $agent): string
     {
-        if (str_contains($this->body, '--- AI Summary ---')) {
-            throw new \Exception('Note already has a summary!');
+        if ($this->tldr !== null) {
+            return $this->tldr;
+        }
+
+        if (blank($this->body)) {
+            throw new \DomainException('Cannot summarize an empty note.');
         }
 
         $summary = $agent->prompt($this->body);
 
-        $this->update([
-            'body' => "--- AI Summary ---\n".$summary."\n\n------------------\n\n".$this->body,
-        ]);
+        $this->tldr = $summary;
+        $this->save();
+
+        return $summary;
     }
 }

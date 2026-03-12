@@ -10,10 +10,13 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
+
     Route::get('/notes', [NoteController::class, 'index']);
     Route::post('/notes', [NoteController::class, 'store']);
     Route::patch('/notes/{note}', [NoteController::class, 'update']);
     Route::post('/notes/{note}/archive', [NoteController::class, 'archive']);
 
-    Route::post('/notes/{note}/summarize', [NoteController::class, 'summarize']);
+    Route::post('/notes/{note}/summarize', [NoteController::class, 'generateSummary'])
+        ->middleware('throttle:10,1')
+        ->name('notes.summarize');
 });

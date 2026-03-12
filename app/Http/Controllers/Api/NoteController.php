@@ -59,12 +59,12 @@ class NoteController extends Controller
         return redirect()->route('dashboard')->with('status', 'Note archived!');
     }
 
-    public function summarize(Note $note, NoteSummarizer $agent): JsonResponse
+    public function generateSummary(Note $note, NoteSummarizer $agent): JsonResponse
     {
         $this->authorize('update', $note);
 
         try {
-            $note->summarize($agent);
+            $note->generateSummary($agent);
 
             return response()->json([
                 'message' => 'Summary appended successfully.',

@@ -201,7 +201,7 @@ Authenticated routes:
 - `POST /api/notes` — create a note
 - `PATCH /api/notes/{note}` — update a note
 - `POST /api/notes/{note}/archive` — archive a note
-- POST /api/notes/{note}/summarize — generate a TL;DR summary
+- `POST /api/notes/{note}/summarize` — generate a TL;DR summary
 
 ---
 

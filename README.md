@@ -1,25 +1,33 @@
-# LaraNotes API
+# LaraNotes AI
 
-LaraNotes API is a small, API-only Laravel application built as a **clean, idiomatic reference**.
+LaraNotes is a small Laravel application demonstrating **clean, idiomatic Laravel architecture** with a deliberately minimal feature set.
 
-It demonstrates how I apply the same architectural principles shown in *LaraNote*—Laravel conventions, clear responsibility boundaries, and restraint around abstractions—in an API context.
+The project focuses on clarity, restraint around abstractions, and strong separation of responsibilities while remaining close to Laravel’s default conventions.
 
-This repository is intended to be a **companion reference** to LaraNote, not a progression in complexity.
+It includes:
+
+- a small authenticated note-taking application
+- a JSON API
+- a simple Blade + Tailwind UI
+- an AI-powered TL;DR summarization feature
+
+The goal is not feature richness but **architectural clarity**.
 
 ---
 
 ## Purpose
 
-This project exists to demonstrate:
+This project exists as a **reference implementation** showing how a Laravel application can remain clean and maintainable without introducing unnecessary architectural layers.
 
-- Idiomatic Laravel API design
-- Token-based authentication using Laravel Sanctum (first-party API tokens)
-- Policy-driven authorization
-- Form Request–based validation and authorization
-- Clean JSON responses using API Resources
-- Behavior-focused feature and policy tests
+It demonstrates:
 
-The goal is correctness and clarity, not feature breadth.
+- idiomatic Laravel structure
+- policy-driven authorization
+- form request validation
+- API resources for consistent JSON output
+- minimal domain behavior in models
+- behavior-focused testing
+- careful restraint around abstraction
 
 ---
 
@@ -32,18 +40,45 @@ A **Note** is a user-owned resource representing a short piece of text content.
 A note:
 - belongs to exactly one user
 - has a title and optional body
+- may optionally have an AI-generated TL;DR summary
 - can be archived
 - is never shared with other users
 
 ---
 
+## AI Summaries
+
+Notes can optionally be summarized using an AI agent.
+
+The application uses the Laravel AI SDK with a small custom agent: 
+App\Ai\Agents\NoteSummarizer
+The agent generates a short **TL;DR summary** of the note body.
+
+Important design decisions:
+
+- the original note body is **never modified**
+- summaries are stored separately in the `tldr` column
+- summarizing a note that already has a summary is a **no-op**
+- the feature is intentionally simple and synchronous
+
+The goal is to demonstrate **minimal integration of external services** without introducing additional architectural layers.
+
+---
+
 ## Ownership & Authorization Rules
 
-- Every note belongs to exactly one authenticated user
-- Users may only view, update, or archive notes they own
-- Users may never access notes owned by other users
+Every note belongs to exactly one user.
 
-All ownership and access rules are enforced via **Laravel policies**.
+Users may only:
+
+- view their own notes
+- update their own notes
+- archive their own notes
+- summarize their own notes
+
+Users may never access notes owned by another user.
+
+All access rules are enforced through **Laravel policies**.
 
 ---
 
@@ -55,6 +90,7 @@ An authenticated user may:
 - list their own notes
 - update a note they own
 - archive a note they own
+- generate a summary for a note they own
 
 ---
 
@@ -66,9 +102,10 @@ A user may **not**:
 - update another user’s notes
 - archive another user’s notes
 - exceed the maximum allowed number of notes
+- generateSummary twice.
 
 Authorization failures return `403 Forbidden`.
-Validation failures return `422 Unprocessable Entity`.
+Validation errors return `422 Unprocessable Entity`.
 
 ---
 
@@ -111,6 +148,7 @@ A note is exposed by the API with the following fields:
 - `id`
 - `title`
 - `body`
+- `tldr`
 - `archived`
 - `timestamps`
 
@@ -124,6 +162,7 @@ Responses are shaped using **API Resources**.
             "id": 1,
             "title": "Hello",
             "body": "World!",
+            "tldr": "Summary",
             "archived": false
         }
     ],
@@ -148,7 +187,9 @@ Responsibilities:
 - **Models**: persistence and simple domain behavior
 - **API Resources**: response formatting
 
-No service layer or custom domain abstractions are used.
+No service layer or additional domain abstractions are introduced unless complexity requires them.
+
+The AI summarization feature is implemented using a small Laravel AI agent rather than introducing a broader service layer.
 
 ---
 
@@ -160,6 +201,7 @@ Authenticated routes:
 - `POST /api/notes` — create a note
 - `PATCH /api/notes/{note}` — update a note
 - `POST /api/notes/{note}/archive` — archive a note
+- POST /api/notes/{note}/summarize — generate a TL;DR summary
 
 ---
 
@@ -171,6 +213,7 @@ The test suite includes:
 
 - Policy tests to validate ownership and note limit rules
 - Feature tests for API endpoints
+- Feature tests for AI summarization behavior
 - Authentication and authorization scenarios
 
 ---
@@ -184,13 +227,76 @@ This project intentionally does **not** include:
 - background jobs or queues
 - event-driven architecture
 - complex filtering or querying
-- frontend views
+- large frontend frameworks
+
+The purpose is to **remain small, readable, and focused.**
 
 ---
 
 ## Setup (Optional)
 
-Local setup instructions will be added once the API surface stabilizes.
+## Setup
+
+Clone the repository and install dependencies:
+
+```bash
+git clone https://github.com/<your-username>/laranotes-ai.git
+cd laranotes-ai
+composer install
+npm install
+```
+
+Set up your environment and database:
+
+```bash
+cp .env.example .env
+php artisan key:generate
+php artisan migrate
+```
+
+Build frontend assets:
+
+```bash
+npm run build 
+```
+
+Start the development server:
+
+```bash
+php artisan serve 
+```
+
+The application will be available at:
+
+```bash
+http://localhost:8000 
+```
+
+---
+
+## AI Setup
+
+The TL;DR summarization feature uses the **Laravel AI SDK** with **Ollama** as the default provider.
+
+Install and start Ollama locally:
+
+https://ollama.com
+
+Pull a compatible model, for example:
+
+```bash
+ollama pull llama3
+```
+
+Add the Ollama configuration to your .env file:
+
+```bash
+OLLAMA_HOST=http://localhost:11434
+OLLAMA_MODEL=llama3
+OLLAMA_API_KEY=YOUR-API-KEY
+```
+
+Make sure the Ollama server is running before using the summarization feature.
 
 ---
 

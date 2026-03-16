@@ -18,5 +18,5 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
 
     Route::post('/notes/{note}/summarize', [NoteController::class, 'generateSummary'])
         ->middleware('throttle:10,1')
-        ->name('notes.summarize');
+        ->name('notes.apisummarize');
 });

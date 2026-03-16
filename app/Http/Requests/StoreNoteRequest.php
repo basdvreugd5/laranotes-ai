@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\Note;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreNoteRequest extends FormRequest
 {
@@ -23,7 +24,7 @@ class StoreNoteRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title' => ['required', 'string', 'max:255'],
+            'title' => ['required', 'string', 'max:255', Rule::unique('notes')->where(fn ($query) => $query->where('user_id', $this->user()->id))],
             'body' => ['nullable', 'string'],
         ];
     }

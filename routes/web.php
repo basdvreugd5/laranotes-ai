@@ -20,7 +20,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/notes', [NoteController::class, 'store'])->name('notes.store');
     Route::patch('/notes/{note}', [NoteController::class, 'update'])->name('notes.update');
     Route::patch('/notes/{note}/archive', [NoteController::class, 'archive'])->name('notes.archive');
-    Route::post('/notes/{note}/summarize', [NoteController::class, 'summarize'])
+    Route::post('/notes/{note}/summarize', [NoteController::class, 'generateSummary'])
         ->name('notes.summarize');
 });
 
